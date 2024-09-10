@@ -26,7 +26,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     app.use(body_parser_1.default.json());
     app.use(body_parser_1.default.urlencoded({ extended: true }));
     // Unatheticated endpoints
-    app.use(user_route_1.default);
+    app.use("/api", user_route_1.default);
     //authenticated endpoints
     app.use(authorization_middleware_1.authorizationMiddleware);
     app.use("/", (req, res) => {

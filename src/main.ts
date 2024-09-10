@@ -16,7 +16,7 @@ const main = async () => {
     app.use(bodyParser.urlencoded({ extended: true }));
 
     // Unatheticated endpoints
-    app.use(userRoute);
+    app.use("/api",userRoute);
     
     //authenticated endpoints
     app.use(authorizationMiddleware)
