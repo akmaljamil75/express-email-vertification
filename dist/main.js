@@ -18,13 +18,17 @@ const database_connection_1 = require("./database/database-connection");
 const process_1 = require("process");
 const body_parser_1 = __importDefault(require("body-parser"));
 const user_route_1 = __importDefault(require("../src/routes/user-route"));
-const handling_exception_1 = __importDefault(require("../src/middlewares/handling-exception"));
+const handling_exception_middleware_1 = require("./middlewares/handling-exception-middleware");
+const authorization_middleware_1 = require("./middlewares/authorization-middleware");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const app = (0, express_1.default)();
     const port = config_1.Config.getPort();
     app.use(body_parser_1.default.json());
     app.use(body_parser_1.default.urlencoded({ extended: true }));
+    // Unatheticated endpoints
     app.use(user_route_1.default);
+    //authenticated endpoints
+    app.use(authorization_middleware_1.authorizationMiddleware);
     app.use("/", (req, res) => {
         res.send("Welcome To Sarabih");
     });
@@ -38,6 +42,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     app.listen(port, () => {
         console.log("app listen port : " + port);
     });
-    app.use(handling_exception_1.default);
+    // handling middlewares error
+    app.use(handling_exception_middleware_1.middlewareHandlingException);
 });
 main();

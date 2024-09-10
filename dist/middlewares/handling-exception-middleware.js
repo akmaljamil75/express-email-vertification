@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.middlewareHandlingException = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const mongoose_1 = require("mongoose");
 const middlewareHandlingException = (err, req, res, next) => {
@@ -23,4 +24,4 @@ const middlewareHandlingException = (err, req, res, next) => {
     console.log(err.stack);
     return res.status(Number(customError.code)).json(customError);
 };
-exports.default = middlewareHandlingException;
+exports.middlewareHandlingException = middlewareHandlingException;

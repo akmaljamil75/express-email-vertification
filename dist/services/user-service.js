@@ -20,6 +20,10 @@ const config_1 = require("../config/config");
 const normal_exception_1 = require("../exception/normal-exception");
 const user_model_1 = __importDefault(require("../models/user-model"));
 const jwt_util_1 = require("../utils/jwt-util");
+const util_1 = require("util");
+const fs_1 = __importDefault(require("fs"));
+const handlebars_1 = __importDefault(require("handlebars"));
+const readFile = (0, util_1.promisify)(fs_1.default.readFile);
 const register = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const hash = yield bcryptjs_1.default.hash(payload.password, 12);
     const body = {
@@ -30,12 +34,26 @@ const register = (payload) => __awaiter(void 0, void 0, void 0, function* () {
         username: payload.username
     };
     const insert = yield user_model_1.default.create(body);
-    const token = (0, jwt_util_1.generateTokenVerifyEmail)(body);
-    yield (0, exports.sendVerifyEmail)(body.email, token);
+    const bodyToken = {
+        email: payload.email,
+        role: payload.role,
+        verified: false,
+        username: payload.username
+    };
+    const token = (0, jwt_util_1.generateTokenVerifyEmail)(bodyToken);
+    yield (0, exports.sendVerifyEmail)(body.email, token, body.username);
+    delete insert._id;
     return insert;
 });
 exports.register = register;
-const sendVerifyEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
+const sendVerifyEmail = (email, token, username) => __awaiter(void 0, void 0, void 0, function* () {
+    let html = yield readFile('src/index.html', 'utf8');
+    let template = handlebars_1.default.compile(html);
+    let data = {
+        username: username,
+        url: `Please verify your email by clicking the following link: http://localhost:3000/user/verify-email/${token}`
+    };
+    let htmlToSend = template(data);
     const transporter = nodemailer_1.default.createTransport({
         service: "Gmail",
         host: config_1.Config.getEmailUser(),
@@ -50,7 +68,7 @@ const sendVerifyEmail = (email, token) => __awaiter(void 0, void 0, void 0, func
         from: config_1.Config.getEmailUser(),
         to: email,
         subject: 'Email Verification',
-        text: `Please verify your email by clicking the following link: http://localhost:3000/user/verify-email/${token}`
+        html: htmlToSend
     });
 });
 exports.sendVerifyEmail = sendVerifyEmail;
@@ -59,7 +77,8 @@ const verifyEmail = (token) => __awaiter(void 0, void 0, void 0, function* () {
     const bodyToken = {
         email: verify === null || verify === void 0 ? void 0 : verify.payload.email,
         role: verify === null || verify === void 0 ? void 0 : verify.payload.role,
-        username: verify === null || verify === void 0 ? void 0 : verify.payload.username
+        username: verify === null || verify === void 0 ? void 0 : verify.payload.username,
+        verified: verify === null || verify === void 0 ? void 0 : verify.payload.verified,
     };
     if (verify.payload.verified) {
         throw new normal_exception_1.NormalException("Email Sudah DiVertifikasi", http_status_codes_1.StatusCodes.TOO_MANY_REQUESTS);
@@ -83,10 +102,16 @@ const login = (body) => __awaiter(void 0, void 0, void 0, function* () {
     if (!compare) {
         throw new normal_exception_1.NormalException("Password Yang Dimasukan Salah", http_status_codes_1.StatusCodes.BAD_REQUEST);
     }
-    if (findUser.verified) {
+    if (!findUser.verified) {
         throw new normal_exception_1.NormalException("Email Belum DiVertifikasi, Silahkan Melakukan Permintaan Vertifikasi", http_status_codes_1.StatusCodes.UNAUTHORIZED);
     }
-    const token = (0, jwt_util_1.generateToken)(findUser);
+    const bodyToken = {
+        email: findUser.email,
+        role: findUser.role,
+        username: findUser.username,
+        verified: findUser.verified,
+    };
+    const token = (0, jwt_util_1.generateToken)(bodyToken);
     return token;
 });
 exports.login = login;

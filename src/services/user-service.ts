@@ -74,7 +74,7 @@ export const sendVerifyEmail = async (email : string, token : string, username :
 export const verifyEmail = async (token : string) => {
 
     const verify = verifyToken(token);
-    const bodyToken : IBodyToken = {
+    const bodyToken : any = {
         email: verify?.payload.email,
         role: verify?.payload.role,
         username: verify?.payload.username,
